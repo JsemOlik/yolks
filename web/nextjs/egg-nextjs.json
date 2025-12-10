@@ -1,0 +1,75 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2024-01-01T00:00:00+00:00",
+    "name": "Next.js",
+    "author": "hello@jsemolik.dev",
+    "description": "Next.js application with automatic Git repository cloning and build support.",
+    "features": null,
+    "docker_images": {
+        "ghcr.io/jsemolik/yolks:nextjs": "ghcr.io/jsemolik/yolks:nextjs"
+    },
+    "file_denylist": [
+        ".git",
+        ".gitignore",
+        ".gitattributes"
+    ],
+    "startup": "/entrypoint.sh",
+    "config": {
+        "files": "{}",
+        "startup": {
+            "done": "Ready in"
+        },
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/ash\n# Next.js Installation Script\n#\n# Server Files: /mnt/server\n\ncd /mnt/server\n\nif [ -z \"${GIT_REPOSITORY}\" ]; then\n    echo \"Error: GIT_REPOSITORY variable is not set.\"\n    echo \"Please provide a Git repository URL in the server variables.\"\n    exit 1\nfi\n\n# Remove existing files if they exist (except node_modules to speed up reinstall)\nif [ -d \".git\" ]; then\n    echo \"Removing existing Git repository...\"\n    rm -rf .git\nfi\n\nif [ -f \"package.json\" ] && [ ! -d \"node_modules\" ]; then\n    echo \"Keeping existing package.json for fresh install...\"\nfi\n\n# Clone the repository\necho \"Cloning repository: ${GIT_REPOSITORY}\"\n\n# Extract branch if specified in GIT_BRANCH variable, default to main/master\nGIT_BRANCH=${GIT_BRANCH:-main}\n\n# Try main branch first, fallback to master if main doesn't exist\nif git ls-remote --heads --exit-code ${GIT_REPOSITORY} main > /dev/null 2>&1; then\n    DEFAULT_BRANCH=\"main\"\nelif git ls-remote --heads --exit-code ${GIT_REPOSITORY} master > /dev/null 2>&1; then\n    DEFAULT_BRANCH=\"master\"\nelse\n    DEFAULT_BRANCH=\"main\"\nfi\n\n# Use GIT_BRANCH if set, otherwise use default\nBRANCH=${GIT_BRANCH:-${DEFAULT_BRANCH}}\n\necho \"Cloning branch: ${BRANCH}\"\n\n# Clone with depth 1 for faster cloning\nif ! git clone --depth 1 --branch ${BRANCH} ${GIT_REPOSITORY} . 2>/dev/null; then\n    echo \"Failed to clone branch ${BRANCH}, trying default branch...\"\n    git clone --depth 1 ${GIT_REPOSITORY} .\nfi\n\nif [ ! -f \"package.json\" ]; then\n    echo \"Error: package.json not found in repository.\"\n    echo \"Please ensure your repository contains a valid Next.js application.\"\n    exit 1\nfi\n\necho \"Repository cloned successfully!\"\necho \"Next.js application is ready for building and starting.\"",
+            "container": "ghcr.io/jsemolik/yolks:nextjs",
+            "entrypoint": "ash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Git Repository URL",
+            "description": "The URL of the Git repository to clone. Must be a public repository (HTTPS format).\n\nExample: https://github.com/username/repository.git",
+            "env_variable": "GIT_REPOSITORY",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|url"
+        },
+        {
+            "name": "Git Branch",
+            "description": "The Git branch to clone. Leave empty to use the default branch (main or master).",
+            "env_variable": "GIT_BRANCH",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:100"
+        },
+        {
+            "name": "Node Environment",
+            "description": "The NODE_ENV environment variable for Next.js.\n\nOptions: development, production",
+            "env_variable": "NODE_ENV",
+            "default_value": "production",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:development,production"
+        },
+        {
+            "name": "Port",
+            "description": "The port that Next.js will listen on. Leave empty to use the server's allocation port automatically.",
+            "env_variable": "PORT",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|integer|min:1024|max:65535"
+        }
+    ]
+}
+
