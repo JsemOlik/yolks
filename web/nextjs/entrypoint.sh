@@ -1,6 +1,6 @@
 #!/bin/ash
 
-cd /root/container || exit
+cd /home/container || exit
 
 if [ ! -f "package.json" ]; then
     echo "No package.json found. Please ensure your server files are uploaded."

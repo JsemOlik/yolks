@@ -3,7 +3,20 @@
 #
 # Server Files: /mnt/server
 
-cd /mnt/server
+# Install git if not available (for alpine-based containers)
+if ! command -v git > /dev/null 2>&1; then
+    echo "Installing git..."
+    apk add --no-cache git || {
+        echo "Error: Failed to install git. Please ensure the installation container supports apk package manager."
+        exit 1
+    }
+fi
+
+# Change to server directory
+cd /mnt/server || {
+    echo "Error: Failed to change to /mnt/server directory."
+    exit 1
+}
 
 if [ -z "${GIT_REPOSITORY}" ]; then
     echo "Error: GIT_REPOSITORY variable is not set."
@@ -19,13 +32,6 @@ fi
 
 if [ -f "package.json" ] && [ ! -d "node_modules" ]; then
     echo "Keeping existing package.json for fresh install..."
-fi
-
-# Check if git is available
-if ! command -v git > /dev/null 2>&1; then
-    echo "Error: git is not installed in the installation container."
-    echo "Please ensure the installation container has git installed."
-    exit 1
 fi
 
 # Clone the repository
